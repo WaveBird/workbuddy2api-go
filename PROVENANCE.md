@@ -10,7 +10,7 @@
 | 位置 | 值 |
 |---|---|
 | 运行镜像 `ghcr.io/ithtelab/workbuddy2api:latest` 的 label `dev.workbuddy.upstream-id` | `f0d14f4cb9d3bedd9ad6b58f94ab16c640abad5b1fd3a79f2952f9ec5bde4b95` |
-| 部署目录 `/Users/jame/workbuddy-deploy/workbuddy2api/.upstream-id` | 同上 |
+| 部署目录（默认 `/opt/workbuddy2api`）的 `.upstream-id` | 同上 |
 | 本仓库 `.upstream-id` | 同上 |
 
 镜像的其它元信息：`org.opencontainers.image.version = 2.11.12`。
