@@ -1,4 +1,6 @@
 > **本 fork 的差异**：仅新增「出站转储」（腾讯视角），默认关闭、只写文件、不改转发行为。见 [OUTBOUND-TRACE.md](OUTBOUND-TRACE.md)。
+>
+> **基线可核对**：本仓库建立在 `upstream-id = caeb00aa…4198d641` 的源码快照上，与运行中的镜像 label 一致；来源与逐项差异见 [PROVENANCE.md](PROVENANCE.md)。
 
 <p align="center">
   <img src="https://raw.githubusercontent.com/DGZSbot/ai-icon/refs/heads/main/WorkBuddy.png" alt="WorkBuddy2API" width="120">

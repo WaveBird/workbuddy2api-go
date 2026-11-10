@@ -47,3 +47,7 @@ docs/
 # 设计/计划文档（但 README.md 必须进版本库）
 *.md
 !README.md
+# 本 fork 的两篇文档要随仓库分发：基线与来源可核对性（PROVENANCE）与
+# 唯一功能差异的说明（OUTBOUND-TRACE）——被 *.md 挡住就等于没写。
+!PROVENANCE.md
+!OUTBOUND-TRACE.md
