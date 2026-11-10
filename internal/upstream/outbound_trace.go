@@ -14,12 +14,14 @@ package upstream
 //   3. **有界**：单条请求/响应各自截断到 MaxBody，一次调用最多两行。
 
 import (
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
 	"os"
 	"path/filepath"
+	"strings"
 	"sync"
 	"time"
 )
@@ -65,6 +67,9 @@ type outboundLine struct {
 	Status    int               `json:"status,omitempty"`
 	Headers   map[string]string `json:"headers,omitempty"`
 	Body      string            `json:"body,omitempty"`
+	// BodyEncoding 非空表示 body 不是明文，而是 base64（当前只有 base64+gzip）：
+	// 请求体被 gzip 压缩过时，原始字节不是合法 UTF-8，直接写进 JSON 会丢字节。
+	BodyEncoding string          `json:"body_encoding,omitempty"`
 	Truncated bool              `json:"truncated,omitempty"`
 	Error     string            `json:"error,omitempty"`
 }
@@ -75,9 +80,10 @@ func (t *OutboundTrace) start(traceID, uid string, req *http.Request, body []byt
 		return nil
 	}
 	rec := &outboundRec{t: t, traceID: traceID, uid: uid, url: req.URL.String(), started: time.Now()}
-	payload, truncated := clip(body, t.limit())
+	payload, truncated, encoding := clipOutboundBody(body, t.limit(), req.Header)
 	rec.emit(outboundLine{
 		Kind: "request", TraceID: traceID, UID: uid, TS: rec.started.UnixMilli(),
+		BodyEncoding: encoding,
 		Method: req.Method, URL: rec.url, Headers: redactHeader(req.Header),
 		Body: payload, Truncated: truncated,
 	})
@@ -95,8 +101,9 @@ func (r *outboundRec) response(status int, headers http.Header, body []byte, err
 		Headers: redactHeader(headers),
 	}
 	if body != nil {
-		payload, truncated := clip(body, r.t.limit())
-		line.Body, line.Truncated = payload, truncated
+		// 响应也可能被 gzip（上游偶尔会压缩 SSE 响应）—— 同样按 base64 存。
+		payload, truncated, encoding := clipOutboundBody(body, r.t.limit(), headers)
+		line.Body, line.Truncated, line.BodyEncoding = payload, truncated, encoding
 	}
 	if err != nil {
 		line.Error = err.Error()
@@ -194,11 +201,51 @@ func logPrintf(format string, args ...any) {
 }
 
 // clip 截断到 limit，返回（文本, 是否截断）。
+// clip 截断请求体 / 响应体。
+//
+// **gzip 压缩过的请求体必须 base64**：它是非法 UTF-8 的二进制，直接 string()
+// 会被 Go 的 JSON 编码器替换成 U+FFFD（EF BF BD）—— 字节在**写入时就丢了**，
+// 管理端无论怎么解码都还原不回来（实测：body 开头变成 `\x1f\uFFFD\x08`）。
+// 所以压缩体走 base64，并在行里标 `body_encoding: "base64+gzip"`，管理端据此
+// 解码后再解压。
 func clip(body []byte, limit int) (string, bool) {
 	if limit <= 0 || len(body) <= limit {
 		return string(body), false
 	}
 	return string(body[:limit]), true
+}
+
+// clipOutboundBody 与 clip 相同，但会根据 Content-Encoding 判断是否需要 base64。
+//
+// 判据是**头**：上游在请求体超过 64 KB 时会 gzip 压缩再发腾讯
+// （`outboundBody`），转储拿到的就是压缩字节。
+func clipOutboundBody(body []byte, limit int, headers http.Header) (string, bool, string) {
+	if isGzipEncoded(headers) {
+		if limit > 0 && len(body) > limit {
+			body = body[:limit]
+		}
+		return base64.StdEncoding.EncodeToString(body), false, "base64+gzip"
+	}
+	text, truncated := clip(body, limit)
+	return text, truncated, ""
+}
+
+// isGzipEncoded 判断请求/响应是否 gzip 压缩。
+func isGzipEncoded(headers http.Header) bool {
+	if headers == nil {
+		return false
+	}
+	for k, vs := range headers {
+		if !strings.EqualFold(k, "Content-Encoding") {
+			continue
+		}
+		for _, v := range vs {
+			if strings.Contains(strings.ToLower(v), "gzip") {
+				return true
+			}
+		}
+	}
+	return false
 }
 
 // redactHeader 打码后再入库：`Bearer xxx` 保留 scheme + 前 6 位，其余密钥类头
