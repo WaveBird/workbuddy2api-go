@@ -9,11 +9,11 @@
 
 | 位置 | 值 |
 |---|---|
-| 运行镜像 `ghcr.io/ithtelab/workbuddy2api:latest` 的 label `dev.workbuddy.upstream-id` | `caeb00aa6c752fa7286b78685a0c582d7233baee2e85286106ac29af1198d641` |
+| 运行镜像 `ghcr.io/ithtelab/workbuddy2api:latest` 的 label `dev.workbuddy.upstream-id` | `f0d14f4cb9d3bedd9ad6b58f94ab16c640abad5b1fd3a79f2952f9ec5bde4b95` |
 | 部署目录 `/Users/jame/workbuddy-deploy/workbuddy2api/.upstream-id` | 同上 |
 | 本仓库 `.upstream-id` | 同上 |
 
-镜像的其它元信息：`org.opencontainers.image.version = 2.11.10`，构建时间 `2026-11-04T05:51:02Z`。
+镜像的其它元信息：`org.opencontainers.image.version = 2.11.12`。
 
 复核方式：
 
@@ -41,18 +41,34 @@ cat .upstream-id
 
 ## 相对基线的差异（全部在此）
 
+基线 = `upstream-id = f0d14f4c…bde4b95`（v2.11.12）的源码快照，随上游的 Release 包
+（`workbuddy-manager` 的 `upstream-src` 资产）分发。
+
 ```
-$ diff -rq <本仓库> <部署目录>   # 排除 .git / auths / data / config.json
-Files README.md differ                     # 顶部加一行「本 fork 的差异」
+$ diff -rq <本仓库> <新版上游快照>   # 排除 .git
+Files README.md differ                  # 顶部加「本 fork 的差异」+ 配套管理端链接
+Files .upstream-id differ              # 本仓库的标识（值与基线一致）
+Only in .: OUTBOUND-TRACE.md           # 新增：设计与开关说明
+Only in .: PROVENANCE.md               # 新增：本文件（基线与来源）
+```
+
+补丁本身（出站转储）相对基线改了这些：
+
+```
 Files cmd/server/config.go differ          # 新增 outbound_trace 配置段
 Files cmd/server/main.go differ            # 按配置装配转储器
 Files config.example.json differ           # 增加示例段（默认 false）
 Files internal/server/handler.go differ    # 入站 X-Trace-ID 透传到 ChatMeta
 Files internal/upstream/client.go differ   # 三个出口接上转储
 Only in internal/upstream: outbound_trace.go   # 新增：转储实现
-Only in .: OUTBOUND-TRACE.md               # 新增：设计与开关说明
-Only in <部署目录>: .github                # 本仓库未收录上游 CI（推送时 workflow 文件被拒）
 ```
+
+> `internal/upstream/model.json` 另有一处差异：上游发布包里的那份是 27 条模型，
+> 而**部署目录**（上游维护者实际在跑的那份）是 38 条 —— 多出来的
+> `hy4` / `hy4free` / `hy4std` / `minimax-m2.7` / `minimax-m3.1-flash` /
+> `kimi-k3-1` / `kimi-k3.1-pro` / `step-5-preview` / `mimo-v2.6-pro` /
+> `mimo-v2.6-flash` / `deepseek-v4-flash-vision-exp` 是维护者后补的。
+> 本仓库取**部署目录**那份（38 条），否则重建镜像会把这些模型回滚掉。
 
 ## 构建与验证
 
@@ -60,10 +76,10 @@ Only in <部署目录>: .github                # 本仓库未收录上游 CI（�
 # 构建（Go 1.22）
 docker run --rm -v "$PWD":/src -w /src -e GOFLAGS=-mod=mod golang:1.22 sh -c 'go build ./...'
 # 测试
-docker run --rm -v "$PWD":/src -w /src -e GOFLAGS=-mod=mod golang:1.22 sh -c 'go test ./internal/upstream/ ./internal/server/'
+docker run --rm -v "$PWD":/src -w /src -e GOFLAGS=-mod=mod golang:1.22 sh -c 'go test ./internal/upstream/ ./internal/server/ ./cmd/server/'
 ```
 
-本仓库提交时两者均通过。
+本仓库提交时三者均通过。
 
 ## 许可
 

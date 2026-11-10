@@ -131,5 +131,60 @@
   "auto": {
     "context_length": 168000,
     "source": "seed"
+  },
+  "hy4": {
+    "context_length": 1000000,
+    "max_output_tokens": 64000,
+    "source": "seed"
+  },
+  "hy4free": {
+    "context_length": 1000000,
+    "max_output_tokens": 64000,
+    "source": "seed"
+  },
+  "hy4std": {
+    "context_length": 1000000,
+    "max_output_tokens": 64000,
+    "source": "seed"
+  },
+  "minimax-m2.7": {
+    "context_length": 200000,
+    "max_output_tokens": 131072,
+    "source": "seed"
+  },
+  "minimax-m3.1-flash": {
+    "context_length": 1000000,
+    "max_output_tokens": 524288,
+    "source": "seed"
+  },
+  "kimi-k3-1": {
+    "context_length": 1048576,
+    "max_output_tokens": 131072,
+    "source": "seed"
+  },
+  "kimi-k3.1-pro": {
+    "context_length": 1048576,
+    "max_output_tokens": 131072,
+    "source": "seed"
+  },
+  "step-5-preview": {
+    "context_length": 1000000,
+    "max_output_tokens": 65536,
+    "source": "seed"
+  },
+  "mimo-v2.6-pro": {
+    "context_length": 1000000,
+    "max_output_tokens": 131072,
+    "source": "seed"
+  },
+  "mimo-v2.6-flash": {
+    "context_length": 1000000,
+    "max_output_tokens": 131072,
+    "source": "seed"
+  },
+  "deepseek-v4-flash-vision-exp": {
+    "context_length": 1000000,
+    "max_output_tokens": 384000,
+    "source": "seed"
   }
 }

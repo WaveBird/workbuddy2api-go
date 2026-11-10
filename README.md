@@ -1,6 +1,9 @@
 > **本 fork 的差异**：仅新增「出站转储」（腾讯视角），默认关闭、只写文件、不改转发行为。见 [OUTBOUND-TRACE.md](OUTBOUND-TRACE.md)。
 >
-> **基线可核对**：本仓库建立在 `upstream-id = caeb00aa…4198d641` 的源码快照上，与运行中的镜像 label 一致；来源与逐项差异见 [PROVENANCE.md](PROVENANCE.md)。
+> **基线可核对**：本仓库建立在 `upstream-id = f0d14f4c…bde4b95` 的源码快照上（v2.11.12），与运行中的镜像 label 一致；来源与逐项差异见 [PROVENANCE.md](PROVENANCE.md)。
+>
+> **配套的管理端**：<https://github.com/WaveBird/workbuddy-manager> —— 抓包功能在它的「调用抓包」页里（上游 PR：[ithtelab/workbuddy-manager#417](https://github.com/ithtelab/workbuddy-manager/pull/417)）。
+> 本仓库是它的上游依赖：没有这里的出站转储，管理端就看不到「真正发往腾讯的那一跳」。
 
 <p align="center">
   <img src="https://raw.githubusercontent.com/DGZSbot/ai-icon/refs/heads/main/WorkBuddy.png" alt="WorkBuddy2API" width="120">
